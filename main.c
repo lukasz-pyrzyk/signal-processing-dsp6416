@@ -1,9 +1,8 @@
-//loop_poll.c loop program using polling
-#include "DSK6416_AIC23.h"	        //codec support
-Uint32 fs=DSK6416_AIC23_FREQ_8KHZ;	//set sampling rate
+#include "DSK6416_AIC23.h"
+Uint32 fs=DSK6416_AIC23_FREQ_8KHZ;
 #define DSK6416_AIC23_INPUT_MIC 0x0015
 #define DSK6416_AIC23_INPUT_LINE 0x0011
-Uint16 inputsource=DSK6416_AIC23_INPUT_MIC; // select input
+Uint16 inputsource=DSK6416_AIC23_INPUT_MIC;
 
 void main()
 {
@@ -16,4 +15,3 @@ void main()
     output_left_sample(sample_data);
   }
 }
- 
