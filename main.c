@@ -9,11 +9,11 @@ void main()
 {
   short sample_data;
 
-  comm_poll();	            //init DSK, codec, McBSP
-  while(1)				    //infinite loop
+  comm_poll();
+  while(1)
   {
-    sample_data = input_left_sample(); //input sample
-    output_left_sample(sample_data);   //output sample
+    sample_data = input_left_sample();
+    output_left_sample(sample_data);
   }
 }
  
