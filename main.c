@@ -7,6 +7,8 @@ Uint16 inputsource=DSK6416_AIC23_INPUT_LINE; // select input
 
 int buffer[BUFSIZE];
 int buf_ptr = 0;
+int max_Value = 0;
+int min_Value = 0;
 
 interrupt void c_int11()
 {
@@ -15,6 +17,16 @@ interrupt void c_int11()
   data_left = input_left_sample();
   data_right = input_right_sample();
 
+	if(data_left > max_Value)
+	{
+		max_Value = data_left;
+	}
+
+	if(data_left < min_Value)
+	{
+		min_Value = data_left;
+	}
+
   output_left_sample(data_left);
   output_right_sample(data_right);
   return;
@@ -22,6 +34,6 @@ interrupt void c_int11()
 
 void main()
 {
-  comm_intr();
-  while(1);
+  	comm_intr();
+	while(1);
 }
