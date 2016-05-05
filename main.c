@@ -3,70 +3,80 @@ Uint32 fs=DSK6416_AIC23_FREQ_8KHZ;	//set sampling rate
 #define DSK6416_AIC23_INPUT_MIC 0x0015
 #define DSK6416_AIC23_INPUT_LINE 0x0011
 Uint16 inputsource=DSK6416_AIC23_INPUT_LINE; // select input
-#define BUFSIZE 512
 
 #define MAX_VALUE 6969
 #define MIN_VALUE -6969
-
-int buffer[BUFSIZE];
-int buf_ptr = 0;
-int max_Value = 0;
-int min_Value = 0;
+#define NOISE 1500
 
 interrupt void c_int11()
 {
-  int data_left, data_right;
-  float percentage_left = 0.0f;
+ 	int i = 0;
+ 	int data_left, data_right;
+ 	float percentage_left = 0.0f;
   
-  data_left = input_left_sample();
-  data_right = input_right_sample();
+	data_left = input_left_sample();
+	data_right = input_right_sample();
 
-	percentage_left = (float)(data_left - MIN_VALUE) / (float) (MAX_VALUE - MIN_VALUE);
-
-	if(percentage_left > 0.75f)
+	if(data_left > NOISE)
 	{
-	// zapal 4
+		percentage_left = (float)(data_left - NOISE) / (float) (MAX_VALUE - NOISE);
 
-	DSK6416_LED_toggle(3);
+		if(percentage_left > 0.75f)
+		{
+			DSK6416_LED_on(3);
+		}
+		else
+		{
+			DSK6416_LED_off(3);
+		}
+
+
+		if(percentage_left > 0.5f)
+		{
+			DSK6416_LED_on(2);
+		}
+		else
+		{
+			DSK6416_LED_off(2);
+		}
+
+
+		if(percentage_left > 0.25f)
+		{
+			DSK6416_LED_on(1);
+		}
+		else
+		{
+			DSK6416_LED_off(1);
+		}
+
+
+		if(percentage_left > 0.0f)
+		{
+			DSK6416_LED_on(0);
+		}
+		else
+		{
+			DSK6416_LED_off(0);
+		}
+
 	}
-	else if(percentage_left > 0.5f)
+	else
 	{
-	// zapal 3
-
-	DSK6416_LED_toggle(2);
-	}
-	else if(percentage_left > 0.25f)
-	{
-	// zapal 2
-
-	DSK6416_LED_toggle(1);
-	}
-	else if(percentage_left > 0.0f)
-	{
-	// zapal 1
-
-	DSK6416_LED_toggle(0);
+		for(i = 0; i < 4; i++)
+		{
+			DSK6416_LED_off(i);
+		}
 	}
 
-
-	if(data_left > max_Value)
-	{
-		max_Value = data_left;
-	}
-
-	if(data_left < min_Value)
-	{
-		min_Value = data_left;
-	}
-
-  output_left_sample(data_left);
-  output_right_sample(data_right);
-  return;
+	output_left_sample(data_left);
+	output_right_sample(data_right);
+	return;
 }
 
 void main()
 {
-  DSK6416_LED_init();
-  	comm_intr();
+	DSK6416_LED_init();
+	comm_intr();
 	while(1);
 }
