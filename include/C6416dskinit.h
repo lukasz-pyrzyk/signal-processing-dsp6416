@@ -1,5 +1,8 @@
 // C6416dskinit.h Include file for C6416DSKINIT.C */
 
+#ifndef INIT_H
+#define INIT_H
+
 #include "dsk6416.h"
 #include "dsk6416_aic23.h"
 #include <csl_mcbsp.h>
@@ -168,3 +171,6 @@ void output_right_sample(short);
 Uint32 input_sample();
 short input_left_sample();
 short input_right_sample();
+
+#endif
+
