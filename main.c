@@ -156,10 +156,10 @@ short FILTR_R (short, short*);
 
 void loop()
 {
-		//int muteR = DSK6416_DIP_get(0);
-		//int muteL = DSK6416_DIP_get(1);
-		//int filterR = DSK6416_DIP_get(2);
-		//int filterL = DSK6416_DIP_get(3);
+		int muteR = DSK6416_DIP_get(0);
+		int muteL = DSK6416_DIP_get(1);
+		int filterR = DSK6416_DIP_get(2);
+		int filterL = DSK6416_DIP_get(3);
 
         while (!DSK6416_AIC23_read(hAIC23_handle, &IN_L));
 
@@ -167,9 +167,9 @@ void loop()
         
 
 
-		/*if(muteR)
+		if(muteR)
 		{
-			OUT_R = 0;
+			OUT_R = -100;
 		}
 		else if(filterR)
 		{
@@ -182,7 +182,7 @@ void loop()
 
 		if(muteL)
 		{
-			OUT_L = 0;
+			OUT_L = -100;
 		}
 		else if(filterL)
 		{
@@ -191,9 +191,9 @@ void loop()
 		else
 		{
 			OUT_L = IN_L;
-		}*/
+		}
 
-    if  (DSK6416_DIP_get(1)== 1){ //filtrowanie lewego i prawego kana³u
+    /*if  (DSK6416_DIP_get(1)== 1){ //filtrowanie lewego i prawego kana³u
 		OUT_R = FILTR_R(IN_R, h1);
 		OUT_L = FILTR_L(IN_L, h1);
         }
@@ -204,7 +204,7 @@ void loop()
 	if (DSK6416_DIP_get(0)== 1){ //filtrowanie tylko lewego kana³u
 		OUT_L = FILTR_L(IN_L, h1);
 		OUT_R=IN_R;
-	}
+	}*/
 		
          while (!DSK6416_AIC23_write(hAIC23_handle, OUT_L));
 
