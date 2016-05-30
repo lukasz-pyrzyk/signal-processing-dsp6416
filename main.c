@@ -160,6 +160,16 @@ enum Channel
 	CHANNEL_LEFT
 };
 
+Int16* outPtr[] = {
+	&OUT_R,
+	&OUT_L
+};
+
+Uint32* inPtr[] = {
+	&IN_R,
+	&IN_L
+};
+
 int muteButtons[] = {
 	0,
 	1
@@ -174,27 +184,32 @@ typedef short (*filterFunc_t)(short, short*);
 
 filterFunc_t filters[] = 
 {
-	FILTR_L,
-	FILTR_R
+	FILTR_R,
+	FILTR_L
 };
 
-void handleChannel(enum Channel channel, Int16* outPtr, Uint32* inPtr)
+void handleChannel(enum Channel channel)
 {
 	int mute = DSK6416_DIP_get(muteButtons[(int)(channel)]);
 	int filter = DSK6416_DIP_get(filterButtons[(int)(channel)]);
 	
 	if(mute)
 	{
-		*outPtr = -100;
+		*(outPtr[channel]) = -100;
 	}
 	else if(filter)
 	{
-		*outPtr = filters[(int)channel](*inPtr, h1);
+		*(outPtr[channel]) = (Uint32)filters[(int)channel](*(inPtr[channel]), h1);
 	}
 	else
 	{
-		*outPtr = *inPtr;
+		*(outPtr[channel]) = *(inPtr[channel]);
 	}
+}
+
+void readChannel(enum Channel channel)
+{
+        while (!DSK6416_AIC23_read(hAIC23_handle, &IN_L));
 }
 
 void loop()
@@ -204,8 +219,8 @@ void loop()
 
         while (!DSK6416_AIC23_read(hAIC23_handle, &IN_R));
         
-		handleChannel(CHANNEL_RIGHT, &OUT_R, &IN_R);
-		handleChannel(CHANNEL_LEFT, &OUT_L, &IN_L);
+		handleChannel(CHANNEL_RIGHT);
+		handleChannel(CHANNEL_LEFT);
 
         while (!DSK6416_AIC23_write(hAIC23_handle, OUT_L));
 
