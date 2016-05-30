@@ -1,4 +1,4 @@
-
+#include <limits.h>
 #include "C6416dskinit.h"
 #define using_bios                  //if BIOS don't use top of vector table
 extern Uint32 fs;            			//for sampling frequency
@@ -123,14 +123,13 @@ Uint16 inputsource=DSK6416_AIC23_INPUT_LINE; // select input
 //#include "dsk6416_dip.h"
 //#include "dsk6416_led.h"
 
-#define MAX_VALUE 6969
+#define MAX_VALUE 4294967294
 #define MIN_VALUE -6969
-#define NOISE 1500
+#define NOISE 1001943131
     
 extern DSK6416_AIC23_CodecHandle hAIC23_handle;
 
-Int16 OUT_L, OUT_R;
-Uint32 IN_L, IN_R;
+short OUT_L, OUT_R;
 
 short L_in[101]; 		/* PRÓBKI WEJSIOWE L_in[0] NAJNOWSZA PRÓBKA LEWA,L_in[101] NAJSTARSZA PRÓBKA LEWA*/
 short R_in[101];        /* PRÓBKI WEJSIOWE P_in[0] NAJNOWSZA PRÓBKA PRAWA,P_in[101] NAJSTARSZA PRÓBKA Prawa*/
@@ -156,6 +155,12 @@ short FILTR_R (short, short*);
 
 #define CHANNEL_LENGTH 2
 
+union deviceData
+{
+	Uint32 streamData;
+	short channelData[2];
+} currentDeviceData;
+
 enum Channel 
 { 
 	CHANNEL_RIGHT,
@@ -167,14 +172,14 @@ enum Channel channels[CHANNEL_LENGTH] = {
 	CHANNEL_LEFT
 };
 
-Int16* outPtr[] = {
+short* outPtr[] = {
 	&OUT_R,
 	&OUT_L
 };
 
-Uint32* inPtr[] = {
-	&IN_R,
-	&IN_L
+short* inPtr[] = {
+	&currentDeviceData.channelData[0],
+	&currentDeviceData.channelData[1]
 };
 
 int muteButtons[] = {
@@ -195,14 +200,25 @@ filterFunc_t filters[] =
 	FILTR_L
 };
 
+void readDeviceData(union deviceData* data)
+{
+	data->streamData = MCBSP_read(DSK6416_AIC23_DATAHANDLE);
+}
+
+void writeDeviceData(union deviceData* data)
+{
+	MCBSP_write(DSK6416_AIC23_DATAHANDLE, data->streamData);
+}
+
 void handleChannel(enum Channel channel)
 {
+	short tmpWrt;
 	int mute = DSK6416_DIP_get(muteButtons[(int)(channel)]);
 	int filter = DSK6416_DIP_get(filterButtons[(int)(channel)]);
 	
 	if(mute)
 	{
-		*(outPtr[channel]) = -100;
+		*(outPtr[channel]) = 0;
 	}
 	else if(filter)
 	{
@@ -212,49 +228,46 @@ void handleChannel(enum Channel channel)
 	{
 		*(outPtr[channel]) = *(inPtr[channel]);
 	}
+
+	tmpWrt = *(outPtr[channel]);
 }
 
 void readChannel(enum Channel channel)
 {
-        while (!DSK6416_AIC23_read(hAIC23_handle, inPtr[channel]));
+ //       while (!DSK6416_AIC23_read(hAIC23_handle, inPtr[channel]));
 }
 
-void writeChannel(enum Channel channel)
+void writeChannel(enum Channel channel, union deviceData* device)
 {
-        while (!DSK6416_AIC23_write(hAIC23_handle, *(outPtr[channel])));
+        //while (!DSK6416_AIC23_write(hAIC23_handle, *(outPtr[channel])));
+		short tmp = *(outPtr[channel]);
+		device->channelData[channel] = tmp;
 }
 
-void loop()
+// max 4294967294
+// nois4294967292
+
+Uint32 max = 0;
+Uint32 min = UINT_MAX;
+
+void handleLEDs(enum Channel channel)
 {
 	int i = 0;
-	enum Channel chan;
-
-	for(; i < CHANNEL_LENGTH; i++)
-	{
-		chan = channels[i];
-
-        readChannel(chan);
-		handleChannel(chan);
-        writeChannel(chan);	
-	}
-}
-
-interrupt void c_int11()
-{
-	loop();
-	return;
- 	/*int i = 0;
- 	int data_left, data_right;
  	float percentage_left = 0.0f;
-  
-	data_left = input_left_sample();
-	data_right = input_right_sample();
 
-	if(data_left > NOISE)
+	Uint32 data = *(inPtr[channel]);
+
+	if(data > max)
+		max = data;
+
+	if(data < min)
+		min = data;
+
+	// if(data > NOISE)
 	{
-		percentage_left = (float)(data_left - NOISE) / (float) (MAX_VALUE - NOISE);
+		percentage_left = (float)(data - NOISE) / (float) (max - NOISE);
 
-		if(percentage_left > 0.75f)
+		if(percentage_left > 0.99f)
 		{
 			DSK6416_LED_on(3);
 		}
@@ -264,7 +277,7 @@ interrupt void c_int11()
 		}
 
 
-		if(percentage_left > 0.5f)
+		if(percentage_left > 0.98f)
 		{
 			DSK6416_LED_on(2);
 		}
@@ -274,7 +287,7 @@ interrupt void c_int11()
 		}
 
 
-		if(percentage_left > 0.25f)
+		if(percentage_left > 0.95f)
 		{
 			DSK6416_LED_on(1);
 		}
@@ -284,7 +297,7 @@ interrupt void c_int11()
 		}
 
 
-		if(percentage_left > 0.0f)
+		if(percentage_left > 0.90f)
 		{
 			DSK6416_LED_on(0);
 		}
@@ -293,18 +306,43 @@ interrupt void c_int11()
 			DSK6416_LED_off(0);
 		}
 
-	}
-	else
-	{
-		for(i = 0; i < 4; i++)
+		if (percentage_left < 0.90f)
 		{
-			DSK6416_LED_off(i);
+			for(i = 0; i < 4; i++)
+			{
+				DSK6416_LED_off(i);
+			}
 		}
+
 	}
 
-	output_left_sample(data_left);
-	output_right_sample(data_right);
-	return;*/
+}
+
+void loop()
+{
+	int i = 0;
+	enum Channel chan;
+
+	readDeviceData(&currentDeviceData);
+
+	for(; i < CHANNEL_LENGTH; i++)
+	{
+		chan = channels[i];
+
+        //readChannel(chan);
+		handleChannel(chan);
+        writeChannel(chan, &currentDeviceData);	
+	}
+
+	writeDeviceData(&currentDeviceData);
+
+	// handleLEDs(chan);
+}
+
+interrupt void c_int11()
+{
+	loop();
+	return;
 }
 
 void main()
