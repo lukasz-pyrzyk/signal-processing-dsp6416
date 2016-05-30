@@ -154,8 +154,15 @@ short h1[]={
 short FILTR_L (short, short*);//DEKLARACJE FUNKCJI ZWRACAJACE WARTOSC short 
 short FILTR_R (short, short*);
 
+#define CHANNEL_LENGTH 2
+
 enum Channel 
 { 
+	CHANNEL_RIGHT,
+	CHANNEL_LEFT
+};
+
+enum Channel channels[CHANNEL_LENGTH] = {
 	CHANNEL_RIGHT,
 	CHANNEL_LEFT
 };
@@ -209,22 +216,27 @@ void handleChannel(enum Channel channel)
 
 void readChannel(enum Channel channel)
 {
-        while (!DSK6416_AIC23_read(hAIC23_handle, &IN_L));
+        while (!DSK6416_AIC23_read(hAIC23_handle, inPtr[channel]));
+}
+
+void writeChannel(enum Channel channel)
+{
+        while (!DSK6416_AIC23_write(hAIC23_handle, *(outPtr[channel])));
 }
 
 void loop()
 {
+	int i = 0;
+	enum Channel chan;
 
-        while (!DSK6416_AIC23_read(hAIC23_handle, &IN_L));
+	for(; i < CHANNEL_LENGTH; i++)
+	{
+		chan = channels[i];
 
-        while (!DSK6416_AIC23_read(hAIC23_handle, &IN_R));
-        
-		handleChannel(CHANNEL_RIGHT);
-		handleChannel(CHANNEL_LEFT);
-
-        while (!DSK6416_AIC23_write(hAIC23_handle, OUT_L));
-
-        while (!DSK6416_AIC23_write(hAIC23_handle, OUT_R));
+        readChannel(chan);
+		handleChannel(chan);
+        writeChannel(chan);	
+	}
 }
 
 interrupt void c_int11()
