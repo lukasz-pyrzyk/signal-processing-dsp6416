@@ -1,0 +1,7 @@
+*.log
+Debug/*
+Debug.*
+
+*.sbl
+*.CS*
+*.paf2
