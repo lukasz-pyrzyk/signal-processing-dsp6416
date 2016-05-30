@@ -11,7 +11,7 @@ void c6416_dsk_init()       			//dsp-peripheral initialization
 DSK6416_init();                   	//call BSL to init DSK-EMIF,PLL)
 
 hAIC23_handle=DSK6416_AIC23_openCodec(0, &config);//handle(pointer) to codec
-DSK6416_AIC23_setFreq(hAIC23_handle, fs);  //set sample rate
+DSK6416_AIC23_setFreq(hAIC23_handle, DSK6416_AIC23_FREQ_96KHZ);  //set sample rate
 DSK6416_AIC23_rset(hAIC23_handle, 0x0004, inputsource);  // choose mic or line in
 MCBSP_config(DSK6416_AIC23_DATAHANDLE,&AIC23CfgData);//interface 32 bits toAIC23
 
@@ -156,12 +156,43 @@ short FILTR_R (short, short*);
 
 void loop()
 {
-            // CZYTAJ PRÓBKÊ Z LEWEGO KANA£U
+		//int muteR = DSK6416_DIP_get(0);
+		//int muteL = DSK6416_DIP_get(1);
+		//int filterR = DSK6416_DIP_get(2);
+		//int filterL = DSK6416_DIP_get(3);
+
         while (!DSK6416_AIC23_read(hAIC23_handle, &IN_L));
 
-            // CZYTAJ PRÓBKÊ Z PRAWEGO KANA£U
         while (!DSK6416_AIC23_read(hAIC23_handle, &IN_R));
-          
+        
+
+
+		/*if(muteR)
+		{
+			OUT_R = 0;
+		}
+		else if(filterR)
+		{
+			OUT_R = FILTR_R(IN_R, h1);
+		}
+		else
+		{
+			OUT_R = IN_R;
+		}
+
+		if(muteL)
+		{
+			OUT_L = 0;
+		}
+		else if(filterL)
+		{
+			OUT_L = FILTR_L(IN_L, h1);
+		}
+		else
+		{
+			OUT_L = IN_L;
+		}*/
+
     if  (DSK6416_DIP_get(1)== 1){ //filtrowanie lewego i prawego kana³u
 		OUT_R = FILTR_R(IN_R, h1);
 		OUT_L = FILTR_L(IN_L, h1);
@@ -175,10 +206,8 @@ void loop()
 		OUT_R=IN_R;
 	}
 		
-            /* WYŒLIJ PRÓBKÊ DO LEWEGO KANA£U */
          while (!DSK6416_AIC23_write(hAIC23_handle, OUT_L));
 
-            /* WYŒLIJ PRÓBKÊ DO PRAWEGO KANA£U */
          while (!DSK6416_AIC23_write(hAIC23_handle, OUT_R));
 }
 
