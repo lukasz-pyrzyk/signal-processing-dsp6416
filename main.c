@@ -154,61 +154,62 @@ short h1[]={
 short FILTR_L (short, short*);//DEKLARACJE FUNKCJI ZWRACAJACE WARTOSC short 
 short FILTR_R (short, short*);
 
+enum Channel 
+{ 
+	CHANNEL_RIGHT,
+	CHANNEL_LEFT
+};
+
+int muteButtons[] = {
+	0,
+	1
+};
+
+int filterButtons[] = {
+	2,
+	3
+};
+
+typedef short (*filterFunc_t)(short, short*);
+
+filterFunc_t filters[] = 
+{
+	FILTR_L,
+	FILTR_R
+};
+
+void handleChannel(enum Channel channel, Int16* outPtr, Uint32* inPtr)
+{
+	int mute = DSK6416_DIP_get(muteButtons[(int)(channel)]);
+	int filter = DSK6416_DIP_get(filterButtons[(int)(channel)]);
+	
+	if(mute)
+	{
+		*outPtr = -100;
+	}
+	else if(filter)
+	{
+		*outPtr = filters[(int)channel](*inPtr, h1);
+	}
+	else
+	{
+		*outPtr = *inPtr;
+	}
+}
+
 void loop()
 {
-		int muteR = DSK6416_DIP_get(0);
-		int muteL = DSK6416_DIP_get(1);
-		int filterR = DSK6416_DIP_get(2);
-		int filterL = DSK6416_DIP_get(3);
 
         while (!DSK6416_AIC23_read(hAIC23_handle, &IN_L));
 
         while (!DSK6416_AIC23_read(hAIC23_handle, &IN_R));
         
+		handleChannel(CHANNEL_RIGHT, &OUT_R, &IN_R);
+		handleChannel(CHANNEL_LEFT, &OUT_L, &IN_L);
 
+        while (!DSK6416_AIC23_write(hAIC23_handle, OUT_L));
 
-		if(muteR)
-		{
-			OUT_R = -100;
-		}
-		else if(filterR)
-		{
-			OUT_R = FILTR_R(IN_R, h1);
-		}
-		else
-		{
-			OUT_R = IN_R;
-		}
-
-		if(muteL)
-		{
-			OUT_L = -100;
-		}
-		else if(filterL)
-		{
-			OUT_L = FILTR_L(IN_L, h1);
-		}
-		else
-		{
-			OUT_L = IN_L;
-		}
-
-    /*if  (DSK6416_DIP_get(1)== 1){ //filtrowanie lewego i prawego kana³u
-		OUT_R = FILTR_R(IN_R, h1);
-		OUT_L = FILTR_L(IN_L, h1);
-        }
-	if (DSK6416_DIP_get(2)== 1){ //wyciszenie
-		OUT_R = 0;
-		OUT_L = 0;
-	}
-	if (DSK6416_DIP_get(0)== 1){ //filtrowanie tylko lewego kana³u
-		OUT_L = FILTR_L(IN_L, h1);
-		OUT_R=IN_R;
-	}*/
-		
-         while (!DSK6416_AIC23_write(hAIC23_handle, OUT_L));
-
-         while (!DSK6416_AIC23_write(hAIC23_handle, OUT_R));
+        while (!DSK6416_AIC23_write(hAIC23_handle, OUT_R));
 }
 
 interrupt void c_int11()
