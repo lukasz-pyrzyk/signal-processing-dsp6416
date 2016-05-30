@@ -1,7 +1,7 @@
 ; Code Composer Project File, Version 2.0 (do not modify or remove this line)
 
 [Project Settings]
-ProjectDir="C:\CCStudio_v3.1\MyProjects\signal-processing\"
+ProjectDir="C:\CCStudio_v3.1\examples\dsk6416\dspmusic-master\signal-processing-dsp6416\"
 ProjectType=Executable
 CPUFamily=TMS320C64XX
 Tool="Compiler"
@@ -12,11 +12,10 @@ Config="Debug"
 Config="Release"
 
 [Source Files]
-Source="lib\rts6400.lib"
+Source="include\Vectors_intr.asm"
 Source="lib\csl6416.lib"
 Source="lib\dsk6416bsl.lib"
-Source="include\c6416dskinit.c"
-Source="include\Vectors_intr.asm"
+Source="lib\rts6400.lib"
 Source="main.c"
 Source="include\C6416dsk.cmd"
 
@@ -32,9 +31,9 @@ Options=-c -o".\Debug\signal-processing.out" -stack0x1000 -w -x -i"c:\CCStudio_v
 ["Linker" Settings: "Release"]
 Options=-c -m".\Release\sine8_LED.map" -o".\Release\sine8_LED.out" -w -x
 
-["..\support\C6416dsk.cmd" Settings: "Debug"]
-LinkOrder=1
+["filter.h" Settings: "Debug"]
+ExcludeFromBuild=true
 
-["..\support\C6416dsk.cmd" Settings: "Release"]
-LinkOrder=1
+["filter.h" Settings: "Release"]
+ExcludeFromBuild=true
 
