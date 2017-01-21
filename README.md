@@ -6,5 +6,4 @@ Simple signal processing on the Fixed-Point Digital Signal Processor - [TMS320C6
 
 Application was written without any documentation from the produced. Most of the code and logic is based on the engineering of the inpu and ouput bytes.
 
-![Photo](./Documentation/P_20160505_184810.jpg)
 Project created with [Jakub Bentkowski](https://github.com/MrJaqbq) for Opole University of Technology.
